@@ -29,6 +29,8 @@ class ZString:
 	def getZ(self):
 		return self.Z
 
+	# code borrowed from GeeksForGeeks
+	# https://www.geeksforgeeks.org/z-algorithm-linear-time-pattern-searching-algorithm/
 	def preprocessZ(self):
 
 		l, r, k = 0, 0, 0
