@@ -1,3 +1,5 @@
+#	Needleman-Wunch global sequaence alignment algorithm
+
 #	For a sequence S1 of length M, and a sequence S2 of length N,
 #	this is a simple O(M*N), in both time and space, 
 #	algorithm for in exact DNA sequence alignment.
