@@ -58,6 +58,8 @@ def readSeq(filename):
 def quality(hits):
     """determines the quality of a list of hits"""
 
+    # "good quality" means that the hits will be 
+    # between two lines that intersect with (0,0)
     slope1 = 1.0e6 / (825000 - 48000)
     slope2 = 1.0e6 / (914000 - 141000)
     offset1 = 0 - slope1*48000
@@ -80,6 +82,12 @@ def makeDotplot(filename, hits):
        filename may end in the following file extensions:
          *.ps, *.png, *.jpg
     """
+
+    if len(hits) == 0:
+        return
+
+    # zip splits the tuples of two in to a tuple of the
+    # 0 index elements and a tuple of the 1 index elements 
     x, y = zip(* hits)
 
     slope1 = 1.0e6 / (825000 - 48000)
@@ -107,6 +115,67 @@ def makeDotplot(filename, hits):
     p.save(filename)
 
     return p
+
+
+def invertSequence(seq):
+
+    newSeq = ""
+
+    for i in range(0, len(seq)):
+
+        base = seq[i]
+        if base == 'A':
+            newSeq = 'T' + newSeq
+        elif base == 'T':
+            newSeq = 'A' + newSeq
+        elif base == 'G':
+            newSeq = 'C' + newSeq
+        elif base == 'C':
+            newSeq = 'G' + newSeq
+    
+    return newSeq
+
+
+def findHits(seq1, seq2, kmerlen=30, matchspacing=1, inversion=False):
+
+    # length of hash key
+
+    # hash table for finding hits (dictionary)
+    lookup = {}
+
+    # store sequence hashes in hash table
+    # if not in table, add empty list to the key and append index of loctiton
+    # if already in table, just append index of location 
+    print "hashing seq1..."
+    for i in xrange(len(seq1) - kmerlen + 1):
+        key = seq1[i:i+kmerlen:matchspacing]
+        lookup.setdefault(key, []).append(i)
+
+    # look up hashes in hash table
+    print "hashing seq2..."
+    hits = [] # an array of tuples (remember tuples are immutable)
+    for i in xrange(len(seq2) - kmerlen + 1):
+
+        if inversion:
+            key = invertSequence(seq2[i:i+kmerlen:matchspacing])
+        else:
+            key = seq2[i:i+kmerlen:matchspacing]
+
+        # store hits to hits list
+        for hit in lookup.get(key, []):
+            hits.append((i, hit))
+
+    #
+    # hits should be a list of tuples
+    # [(index1_in_seq2, index1_in_seq1),
+    #  (index2_in_seq2, index2_in_seq1),
+    #  ...]
+    #
+    # for a one i in seq2, you could have multiple
+    # hits in seq1
+    #
+
+    return hits
 
 
 def main():
@@ -137,41 +206,21 @@ def main():
     seq1 = readSeq(file1)
     seq2 = readSeq(file2)
 
-
-    # length of hash key
-    kmerlen = 30
-
-    # hash table for finding hits
-    lookup = {}
-
-    # store sequence hashes in hash table
-    print "hashing seq1..."
-    for i in xrange(len(seq1) - kmerlen + 1):
-        key = seq1[i:i+kmerlen]
-        lookup.setdefault(key, []).append(i)
-
-
-
-    # look up hashes in hash table
-    print "hashing seq2..."
-    hits = []
-    for i in xrange(len(seq2) - kmerlen + 1):
-        key = seq2[i:i+kmerlen]
-
-        # store hits to hits list
-        for hit in lookup.get(key, []):
-            hits.append((i, hit))
-
-    #
-    # hits should be a list of tuples
-    # [(index1_in_seq2, index1_in_seq1),
-    #  (index2_in_seq2, index2_in_seq1),
-    #  ...]
-    #
+    # 2bi - 100, 1, False
+    # 2bii - 60, 2, False
+    # 2biii - 90, 3, False
+    # 2biv - 120, 4, False
+    # 2e - 180, 1, True -> 180 has only 1 hit
+    kmerlen = 180 
+    matchspacing = 1
+    findInversion = True
+    hits = findHits(seq1, seq2, kmerlen, matchspacing, findInversion)
 
     print "%d hits found" % len(hits)
-    print "making plot..."
-    p = makeDotplot(plotfile, hits)
+
+    if (len(hits) > 0):
+        print "making plot..."
+        p = makeDotplot(plotfile, hits)
 
 
 main()
