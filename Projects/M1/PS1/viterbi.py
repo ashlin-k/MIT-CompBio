@@ -49,15 +49,15 @@ def viterbi(X):
     V = [[0]*N for _ in xrange(L)]
     TB = [[0]*N for _ in xrange(L)]
     
-    for i in xrange(0,L):
+    for i in xrange(0,L):   # for each base in X
         Vprev = []
         if i == 0:
             Vprev = [log(pk0) for pk0 in init_dist]
         else:
             Vprev = V[i-1]
 
-        for k in xrange(N):
-            pass
+        for k in xrange(N):     # for each state +(0) or -(1)
+
             # YOUR CODE HERE
             # Set V[i][k] to the appropriate value for the Viterbi matrix, based
             #  on Vprev (V[i-1]) and the model parameters.
@@ -68,6 +68,19 @@ def viterbi(X):
             #  coded into this program.
             # See note about log probabilities above.
 
+            prevVpos = log(tr[state_idx.get('+')][k]) + Vprev[state_idx.get('+')]
+            prevVneg = log(tr[state_idx.get('-')][k]) + Vprev[state_idx.get('-')]
+
+            # find max previous score, 
+            # start by setting max to '-' state by default
+            maxVprev = prevVneg
+            TB[i][k] = state_idx.get('-')
+            if prevVpos > prevVneg:
+                maxVprev = prevVpos
+                TB[i][k] = state_idx.get('+')
+
+            # calculate Vk 
+            V[i][k] = log(em[k][X[i]]) + maxVprev           
 
     # perform traceback and return the predicted hidden state sequence
     Y = [-1 for i in xrange(L)]
@@ -76,6 +89,7 @@ def viterbi(X):
     for i in xrange(L-2,-1,-1):
         Y[i] = TB[i+1][Y[i+1]]
     return Y
+
 
 ###############################################################################
 # ANNOTATION BENCHMARKING
@@ -87,7 +101,14 @@ def basecomp(X,anno):
         counts[anno[i]][X[i]] += 1
     sum0 = sum(counts[0])
     sum1 = sum(counts[1])
-    return [[float(x)/sum0 for x in counts[0]],[float(x)/sum1 for x in counts[1]]]
+
+    basecomp0, basecomp1 = [0 for i in range(len(base_idx))], [0 for i in range(len(base_idx))]
+    if sum0 != 0:
+        basecomp0 = [float(x)/sum0 for x in counts[0]]
+    if sum1 != 0:
+        basecomp1 = [float(x)/sum1 for x in counts[1]]
+    
+    return [basecomp0, basecomp1]
 
 def region_lengths(anno):
     lengths = [[],[]]
@@ -140,6 +161,7 @@ def main():
         sys.exit(1)
     
     datafile = sys.argv[1]
+    # datafile = "hmmgen"
 
     f = open(datafile)
     X = f.readline()
