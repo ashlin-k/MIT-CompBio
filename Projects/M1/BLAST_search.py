@@ -33,15 +33,17 @@ def getNeighbourhood3(exactWord):
 
 	global blosumMatrix
 
-	threshold = 13
+	thresholdT = 13
 
 	nhWords = {}
-	nhWords[exactWord] = 0
+	exactWordString = "".join(exactWord)
+	nhWords[exactWordString] = 0
 	for i in range(3):
-		nhWords[exactWord] += blosumMatrix.lookup_score(exactWord[i], exactWord[i])
+		nhWords[exactWordString] += int(blosumMatrix.lookup_score(exactWord[i], exactWord[i]))
 
 	allAminoAcids = "ARNDCQEGHILKMFPSTWYVBZX"
-	testWord = "$$$"
+	testWordString = "$$$"
+	testWord = list(testWordString)
 
 	for i in range(0, len(exactWord)):
 
@@ -61,10 +63,10 @@ def getNeighbourhood3(exactWord):
 				score = 0
 
 				for l in range(0, len(exactWord)):
-					score += blosumMatrix.lookup_score(testWord[l], exactWord[l])
+					score += int(blosumMatrix.lookup_score(testWord[l], exactWord[l]))
 
-				if score >= threshold:
-					nhWords[testWord] = score
+				if score >= thresholdT:
+					nhWords[testWordString] = score
 
 	return nhWords
 
@@ -82,52 +84,51 @@ def matchQueryWords(databaseWords, queryWords):
 
 def extendSequence(databaseString, queryString, kmerlen, databaseStart, queryStart):
 
-	global blosumMatrix
-
-	threshold = 0 # ? would think it would be lower than the other threshold
+	global blosumMatrix, thresholdX
 
 	iDatabase, iQuery = databaseStart, queryStart
 
 	queryMatch = ""
 	databaseMatch = ""
+	score = 0
 
 	# extend forward
 	while iDatabase < len(databaseString) and iQuery < len(queryString):
 
-		score += blosumMatrix.lookup_score(databaseString[iDatabase], queryString[iQuery])
+		score += int(blosumMatrix.lookup_score(databaseString[iDatabase], queryString[iQuery]))
 
-		if score < threshold:
+		if score < thresholdX:
 			return score, queryMatch, databaseMatch
 
-		databaseMatch = databaseMatch + databaseMatch[iDatabase]
+		databaseMatch = databaseMatch + databaseString[iDatabase]
 
 		if databaseString[iDatabase] == queryString[iQuery]:
 			queryMatch = queryMatch + queryString[iQuery]
 		else:
 			queryMatch = queryMatch + "-"
 
-		iDatabase++
-		iQuery++
+		iDatabase += 1
+		iQuery += 1
 
 
 	# extend backward
 	iDatabase, iQuery = databaseStart-1, queryStart-1
 	while iDatabase >=0 and iQuery >= 0:
 
-		score += blosumMatrix.lookup_score(databaseString[iDatabase], queryString[iQuery])
+		score += int(blosumMatrix.lookup_score(databaseString[iDatabase], queryString[iQuery]))
 
-		if score < threshold:
+		if score < thresholdX:
 			return score, queryMatch, databaseMatch
 
-		databaseMatch = databaseMatch[iDatabase] + databaseMatch
+		databaseMatch = databaseString[iDatabase] + databaseMatch
 
 		if databaseString[iDatabase] == queryString[iQuery]:
 			queryMatch = queryString[iQuery] + queryMatch
 		else:
 			queryMatch = "-" + queryMatch
 
-		iDatabase--
-		iQuery--
+		iDatabase -= 1
+		iQuery -= 1
 
 	return score, queryMatch, databaseMatch
 
@@ -135,7 +136,7 @@ def extendSequence(databaseString, queryString, kmerlen, databaseStart, querySta
 
 def main():
 
-	global blosumMatrix
+	global blosumMatrix, thresholdX
   
 	# init blosum
 	matrix_filename = blosumdir + "\\blosum62.txt"
@@ -144,19 +145,23 @@ def main():
 	kmerlen = 3
 
 	# generate database of words
-	databaseFile = ""
-	databaseString = readSeq(databaseFile)
+	# databaseFile = ""
+	# databaseString = readSeq(databaseFile)
+	databaseString = "TPQRRABPVDWWRABPT"
 	databaseWords = getWords(databaseString, kmerlen)
 
 	# generate words from query
-	queryFile = ""
-	queryString = readSeq(queryFile)
+	# queryFile = ""
+	# queryString = readSeq(queryFile)
+	queryString = "QABP"
 	queryWords = getWords(queryString, kmerlen)
+
+	thresholdX = 0
 
 	# generate neighbourhood words
 	for qw in queryWords:
 
-		nhWords = getNeighbourhood3(qw)
+		nhWords = getNeighbourhood3(list(qw))
 		iQueryWords = queryWords.get(qw)
 		iDatabaseMatches = matchQueryWords(databaseWords, nhWords)
 
@@ -168,9 +173,13 @@ def main():
 				databaseStart = iDatabaseMatches[j]
 				score, queryMatch, databaseMatch = extendSequence(databaseString, queryString, kmerlen, databaseStart, queryStart)
 
-				if score > threshold:
+				if score > thresholdX:
 					# write to file or print
+					print databaseMatch
+					print queryMatch
+					print "Score = ", score, "at iDB = ", databaseStart, ", iQuery = ", queryStart
+					print "-" * 15
 
 
 if __name__ == '__main__':
-  main()
+	main()
