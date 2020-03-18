@@ -4,6 +4,74 @@ os.sys.path.insert(0,blosumdir)
 from blosum import *
 
 
+class Match:
+
+	def __init__(self, iDB, iQ, nDB, nQ, dbString="", qString="", score=0):
+		self._iDatabase = iDB
+		self._iQuery = iQ
+		self._Ndatabase = nDB
+		self._Nquery = nQ
+		self._databaseString = dbString
+		self._queryString = qString
+		self._score = score
+
+
+	def setDatabaseSequence(self, seq):
+		self._databaseString = seq
+
+	def setQuerySequency(self, seq):
+		self._queryString = seq
+
+	def setScore(self, score):
+		self._score = score
+
+	def getDatabaseSequence(self):
+		return self._databaseString
+
+	def getDatabaseIndex(self):
+		return self._iDatabase
+
+	def getQuerySequence(self):
+		return self._queryString
+
+	def getQueryIndex(self):
+		return self._iQuery
+
+	def getScore(self):
+		return self._score
+
+
+class Hits:
+
+	def __init__(self):
+		self._matches = {}	# keys will be the DB index
+
+	def hasMatch(self, match):
+		return match.getDatabaseIndex() in self._matches
+
+	def addMatch(self, match, kmerlen):
+		
+		# if match is already in the database, don't add
+		if self.hasMatch(match):
+			return False
+
+		else:
+			iNew = match.getDatabaseIndex()
+			for i in range(iNew - kmerlen, iNew + kmerlen + 1):
+
+				# if adjacent duplicate is found, don't add
+				if i in self._matches:
+					return False
+
+			# no adjacent duplicate is found, therefore add
+			self._matches[iNew] = match
+			return True
+
+	def getHitDictionary(self):
+		return self._matches
+			
+
+
 def readSeq(filename):
     """reads in a FASTA sequence"""
 
@@ -98,7 +166,8 @@ def extendSequence(databaseString, queryString, kmerlen, databaseStart, querySta
 		score += int(blosumMatrix.lookup_score(databaseString[iDatabase], queryString[iQuery]))
 
 		if score < thresholdX:
-			return score, queryMatch, databaseMatch
+			match = Match(databaseStart, queryStart, len(databaseMatch), len(queryMatch), databaseMatch, queryMatch, score)
+			return match
 
 		databaseMatch = databaseMatch + databaseString[iDatabase]
 
@@ -118,7 +187,8 @@ def extendSequence(databaseString, queryString, kmerlen, databaseStart, querySta
 		score += int(blosumMatrix.lookup_score(databaseString[iDatabase], queryString[iQuery]))
 
 		if score < thresholdX:
-			return score, queryMatch, databaseMatch
+			match = Match(iDatabase, iQuery, len(databaseMatch), len(queryMatch), databaseMatch, queryMatch, score)
+			return match
 
 		databaseMatch = databaseString[iDatabase] + databaseMatch
 
@@ -130,7 +200,9 @@ def extendSequence(databaseString, queryString, kmerlen, databaseStart, querySta
 		iDatabase -= 1
 		iQuery -= 1
 
-	return score, queryMatch, databaseMatch
+
+	match = Match(iDatabase+1, iQuery+1, len(databaseMatch), len(queryMatch), databaseMatch, queryMatch, score)
+	return match
 
 	
 
@@ -145,40 +217,53 @@ def main():
 	kmerlen = 3
 
 	# generate database of words
-	# databaseFile = ""
-	# databaseString = readSeq(databaseFile)
-	databaseString = "TPQRRABPVDWWRABPT"
+	databaseFile = "database.fa"
+	databaseString = readSeq(databaseFile)
+	# databaseString = "TPQRRABPVDWWRABPT"
 	databaseWords = getWords(databaseString, kmerlen)
 
 	# generate words from query
-	# queryFile = ""
-	# queryString = readSeq(queryFile)
-	queryString = "QABP"
+	queryFile = "query.fa"
+	queryString = readSeq(queryFile)
+	# queryString = "VDW"
 	queryWords = getWords(queryString, kmerlen)
 
 	thresholdX = 0
 
 	# generate neighbourhood words
+	# find seeds and extend
+	hits = Hits()
 	for qw in queryWords:
 
 		nhWords = getNeighbourhood3(list(qw))
-		iQueryWords = queryWords.get(qw)
+		iQuery = queryWords.get(qw)		# a list of all locations where the word is found in the query
+										# assumes you may find the same k-mer more than once in a given query, 
+										# but probably it will be 1
+
+		# find seeds
 		iDatabaseMatches = matchQueryWords(databaseWords, nhWords)
 
-		for i in range(0, len(iQueryWords)):
+		# extend
+		for i in range(0, len(iQuery)):	
 
 			for j in range(0, len(iDatabaseMatches)):
 		
-				queryStart = iQueryWords[i]
+				queryStart = iQuery[i]
 				databaseStart = iDatabaseMatches[j]
-				score, queryMatch, databaseMatch = extendSequence(databaseString, queryString, kmerlen, databaseStart, queryStart)
+				match = extendSequence(databaseString, queryString, kmerlen, databaseStart, queryStart)
 
-				if score > thresholdX:
-					# write to file or print
-					print databaseMatch
-					print queryMatch
-					print "Score = ", score, "at iDB = ", databaseStart, ", iQuery = ", queryStart
-					print "-" * 15
+				if match.getScore() > thresholdX:
+					hits.addMatch(match, kmerlen)
+
+
+	# print all matches
+	hitDictionary = hits.getHitDictionary()
+	for hit in hitDictionary:
+		print "iDatabase = ", hit, ", iQuery = ", hitDictionary[hit].getQueryIndex(), ", Score = ", hitDictionary[hit].getScore()
+		print "DB: ", hitDictionary[hit].getDatabaseSequence()
+		print "QY: ", hitDictionary[hit].getQuerySequence()
+		print "-" * 15
+					
 
 
 if __name__ == '__main__':
