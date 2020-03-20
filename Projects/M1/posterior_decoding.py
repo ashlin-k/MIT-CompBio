@@ -7,6 +7,9 @@
 ## Different from Viterbi, which finds the optimal path given a series of emisions, X
 ## (finds max scoring path over all paths, pi* = argmax(pi)P{x | pi})
 
+## Reference 
+## https://en.wikipedia.org/wiki/Forward%E2%80%93backward_algorithm#Python_example
+
 import sys
 from math import log
 from util import plothist
