@@ -54,14 +54,16 @@ def posteriorDecode(sequence):
         for st in state_idx:
             iState = state_idx[st]
             if i == 0:
-                fsumPrev = init_dist[iState]
+                fsumPrev = log(init_dist[iState])
             else:
-                fsumPrev = sum(fmatrix[state_idx[k]][i-1]*tr[state_idx[k]][iState] for k in state_idx)
+                fsumPrev = sum(fmatrix[state_idx[k]][i-1] + log(tr[state_idx[k]][iState]) for k in state_idx)
 
-            fmatrix[iState][i] = em[iState][iBase] * fsumPrev
+            fmatrix[iState][i] = log(em[iState][iBase]) + fsumPrev
 
     # calculate the probability of all emissions
-    p_fwd = sum(fmatrix[state_idx[k]][len(sequence)-1] * final_dist[state_idx[k]] for k in state_idx)
+    log_p_fwd = sum(fmatrix[state_idx[k]][len(sequence)-1] + log(final_dist[state_idx[k]]) for k in state_idx)
+    # convert p_fwd from log to 10^x
+    p_fwd = 10**log_p_fwd
 
     # Backward part of the algorithm
     for i in range(len(sequence)-1, -1, -1):
@@ -80,7 +82,7 @@ def posteriorDecode(sequence):
     # Merging the two parts
     posterior = [[0 for col in range(len(sequence))] for row in range(len(state_idx))]
     if p_fwd == 0:
-        print "P_fwd is zero!"
+        print "P_fwd is zero! ", p_fwd
         return False, fmatrix, bmatrix, posterior
     for i in range(0, len(sequence)):
         for st in state_idx:
