@@ -1,0 +1,7 @@
+Algorithms TO DO
+
+M1
+-supervised learning? (don't have a training set, also if you can do UL, can do SL)
+-unsupervised learning
+
+M2

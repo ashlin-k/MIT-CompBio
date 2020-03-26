@@ -30,8 +30,8 @@ final_dist = [0.5,0.5]
 # transition probabilities
 tr = [
     #  to+   to-
-    [ 0.80, 0.20 ], # from+
-    [ 0.20, 0.80 ]  # from-
+    [ 0.99, 0.01 ], # from+
+    [ 0.01, 0.99 ]  # from-
 ]
 
 
@@ -53,10 +53,10 @@ def posteriorDecode(sequence):
     fmatrix = [[0 for col in range(len(sequence))] for row in range(len(state_idx))]
     bmatrix = [[0 for col in range(len(sequence))] for row in range(len(state_idx))]  
 
-    fmatrix[0][0] = log(init_dist[0])  
-    fmatrix[1][0] = log(init_dist[1])  
-    bmatrix[0][len(sequence)-1] = log(final_dist[0])  
-    bmatrix[1][len(sequence)-1] = log(final_dist[1])  
+    fmatrix[0][0] = init_dist[0]
+    fmatrix[1][0] = init_dist[1]
+    bmatrix[0][len(sequence)-1] = final_dist[0]
+    bmatrix[1][len(sequence)-1] = final_dist[1] 
 
     # Forward part of the algorithm
     for i in range(1, len(sequence)):    	
@@ -65,15 +65,15 @@ def posteriorDecode(sequence):
             iState = state_idx[st]
             # print "fmatrix[st = 0] = ", fmatrix[0][i-1], "log(tr) = ", log(tr[0][iState]), \
             #     "fmatrix[st = 1] = ", fmatrix[1][i-1], "log(tr) = ", log(tr[1][iState])                
-            fsumPrev = sum(fmatrix[state_idx[k]][i-1] + log(tr[state_idx[k]][iState]) for k in state_idx)
-            fmatrix[iState][i] = log(em[iState][iBase]) + fsumPrev
+            fsumPrev = sum(fmatrix[state_idx[k]][i-1] * tr[state_idx[k]][iState] for k in state_idx)
+            fmatrix[iState][i] = em[iState][iBase] * fsumPrev
             # print "sum = ", fmatrix[iState][i]
             # print "-----------"
 
     # calculate the probability of all emissions
-    log_p_fwd = sum(fmatrix[state_idx[k]][len(sequence)-1] + log(final_dist[state_idx[k]]) for k in state_idx)
+    p_fwd = sum(fmatrix[state_idx[k]][len(sequence)-1] * final_dist[state_idx[k]] for k in state_idx)
     # convert p_fwd from log to 10^x
-    p_fwd = 10**log_p_fwd
+    # p_fwd = 10**log_p_fwd
 
     # Backward part of the algorithm
     for i in range(len(sequence)-2, -1, -1):
@@ -81,8 +81,8 @@ def posteriorDecode(sequence):
         for st in state_idx:
             iState = state_idx[st]
             iBase = base_idx[sequence[i+1]] 
-            bmatrix[iState][i] = sum(log(em[state_idx[l]][iBase]) + \
-                log(tr[state_idx[l]][iState]) + bmatrix[state_idx[l]][iBase] for l in state_idx)
+            bmatrix[iState][i] = sum(em[state_idx[l]][iBase] * \
+                tr[state_idx[l]][iState] + bmatrix[state_idx[l]][iBase] for l in state_idx)
 
     # iBase = base_idx[sequence[0]]
     # p_bkw = sum(init_dist[l] * em[l][iBase] * bmatrix[state_idx[l]][iBase] for l in state_idx)
