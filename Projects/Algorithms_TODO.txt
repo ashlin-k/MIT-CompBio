@@ -5,3 +5,19 @@ M1
 -unsupervised learning
 
 M2
+-L6: K means clustering (UL)
+-L6: Hierarchical clustering (UL)
+-L6/7: Naive's Bayes classification (SL)
+-L7: support vector machines (SVMs, SL)
+-L7: RNA reconstruction by mapping to genome
+	-Bowtie (align spliced RNA to genome; cannot align large gaps between spliced RNAs)
+	-Tophat (align spliced RNAs using splice sites after genome mapping; can link large gaps like introns)
+	-Cufflinks (link splced RNAs to transcript alignments)
+-L7: RNA reconstruction by aligning de novo (trinity algorithm)
+-L7: Cuffdiff (probabilistic assignment of readcounts to transcripts)
+[-L7: Cummerbund (applications for biological questions - not covered)]
+-L7: Nussinov algorithm (RNA folding)
+-L7: Stochastic context free grammars ?
+-L8: 
+
+
