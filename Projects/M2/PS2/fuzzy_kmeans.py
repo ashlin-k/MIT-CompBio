@@ -11,18 +11,40 @@ def assignPoints(tbl, ctrs):
     # tbl is a Nx2 2D array, N is number of samples
     # ctrs is a kx2 2D array, where k = 3
 
-    # I think ptsAsgn is a 1D array, where ptsAsign[i] = k, where k = 0,1,2
+    # I think ptsAsgn is a Nxk 2D array, 
+    # where ptsAsgn[i] = [prob for k=0, prob for k=1, prob for k=2,...], where k = 0,1,2
     ptsAsgn = []
 
     """SOME CODE GOES HERE"""
     
     K = len(ctrs)
 
+    # this is the formula from lecture, but it doesn't work very well
+    # p[k] = (1/(2*math.pi)) * math.exp(-dist/2)
+    # so using formula from wikipedia https://en.wikipedia.org/wiki/Fuzzy_clustering#Algorithm
+
+    m = 2       # m is a param normally set to 2 when the distribution is not known
+
     for pt in tbl:
-        dist = [0.0 for d in range(K)]
+
+        # get denom
+        denom = 0.0
         for k in range(K):
-            dist[k] = euclideanDist(pt, ctrs[k])
-        ptsAsgn.append(dist.index(min(dist)))
+            denom += euclideanDist(pt, ctrs[k])
+
+        weight = [0 for i in range(K)]
+
+        # calculate num and weight
+        for k in range(K):
+            num = float(euclideanDist(pt, ctrs[k]))
+            denom2 = math.pow((num/denom), 2*m-1)
+            if denom2 != 0:
+                weight[k] = 1 / math.pow((num/denom), 2*m-1)
+            else:       # if pt == ctrs[k], set that probability to 1 and rest to zero
+                weight = [0 for i in range(K)]
+                weight[k] = 1
+
+        ptsAsgn.append(weight)
 
     return ptsAsgn
 
@@ -32,22 +54,22 @@ def recalculateCtrs(tbl, ctrs, ptsAsgn):
 
     K = len(ctrs)
     D = len(ctrs[0])
-    newCtrs = [[0.0 for j in range(D)] for k in range(K)]
+    newCtrs = [[0.0 for d in range(D)] for k in range(K)]
+    pSum = [0.0 for k in range(K)]
 
     """SOME CODE GOES HERE"""
-
-    counts = [0 for k in range(K)]
     
     # sum
     for i in range(len(ptsAsgn)):
-        counts[ptsAsgn[i]] += 1
-        for d in range(D):
-            newCtrs[ptsAsgn[i]][d] += tbl[i][d]
+        for k in range(K):
+            pSum[k] += ptsAsgn[i][k]
+            for d in range(D):
+                newCtrs[k][d] += tbl[i][d] * ptsAsgn[i][k]
     
     # divide by total
     for k in range(K):
         for d in range(D):
-            newCtrs[k][d] /= counts[k]
+            newCtrs[k][d] /= pSum[k]
 
     return newCtrs
 
@@ -73,13 +95,14 @@ def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
          *.ps, *.png, *.jpg
     """
 
-    p = open("./" + anLabel + "_output/dummy_table.txt", "w")
+    p = open("./fuzzy_" + anLabel + "_output/dummy_table.txt", "w")
 
     for i in xrange(len(tbl)):
         for j in xrange(len(tbl[i])):
             p.write(`tbl[i][j]`)
             p.write("\t")
-        p.write(`ptMemb[i]`)
+        k = ptMemb[i].index(max(ptMemb[i]))
+        p.write(`k`)
         p.write("\n")
 
     for i in xrange(len(cntrs)):
@@ -91,7 +114,8 @@ def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
 
     p.close()
 
-    plotCMD = "R CMD BATCH '--args ./" + anLabel + "_output/dummy_table.txt ./" + anLabel + "_plots/cluster_step%d.png" % stepCnt + "' ./kmeans_plot.R;"
+    plotCMD = "R CMD BATCH '--args ./fuzzy_" + anLabel + "_output/dummy_table.txt ./fuzzy_" + anLabel \
+        + "_plots/cluster_step%d.png" % stepCnt + "' ./kmeans_plot.R;"
     call(plotCMD, shell=True)
 
 
@@ -111,9 +135,9 @@ def main():
     analysis_name = "tissue2"
 
     """creates directories for storing plots and intermediate files"""
-    call(["rm", "-r", "./" + analysis_name + "_plots/"])
-    call(["mkdir", "-p", "./" + analysis_name + "_plots/"])
-    call(["mkdir", "-p", "./" + analysis_name + "_output/"])
+    call(["rm", "-r", "./fuzzy_" + analysis_name + "_plots/"])
+    call(["mkdir", "-p", "./fuzzy_" + analysis_name + "_plots/"])
+    call(["mkdir", "-p", "./fuzzy_" + analysis_name + "_output/"])
 
     """Reads in the point data from the given tissue file"""
     dataTable = []
@@ -148,7 +172,7 @@ def main():
         stopDist = 0
         for i in xrange(len(newCtrs)):
             stopDist = stopDist + euclideanDist(oldCtrs[i], newCtrs[i])
-        if stopDist < 5:
+        if stopDist < 1:
             stopCrit = True
 
         stepCount = stepCount + 1

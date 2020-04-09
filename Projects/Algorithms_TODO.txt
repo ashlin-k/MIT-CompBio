@@ -2,7 +2,7 @@ Algorithms TO DO
 
 M1
 -supervised learning? (don't have a training set, also if you can do UL, can do SL)
--unsupervised learning
+-unsupervised learning - expectaiont maximization (Baum-Welch)
 
 M2
 -L6: K means clustering (UL)

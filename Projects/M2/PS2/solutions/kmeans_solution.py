@@ -8,9 +8,15 @@ def assignPoints(tbl, ctrs):
     """Assign each of the points in tbl to the cluster with
         center in ctrs"""
 
-    ptsAsgn = [];
+    ptsAsgn = []
 
-    """SOME CODE GOES HERE"""
+    for p in xrange(len(tbl)):
+        distV = []
+
+        for c in xrange(len(ctrs)):
+            distV.append(euclideanDist(tbl[p], ctrs[c]));
+        
+        ptsAsgn.append(distV.index(min(distV)));
 
     return ptsAsgn
 
@@ -18,9 +24,16 @@ def assignPoints(tbl, ctrs):
 def recalculateCtrs(tbl, ctrs, ptsAsgn):
     """Update the centroids based on the points assigned to them"""
 
+    ptsSum = [[0,0]] * len(ctrs)
+    ptsCount = [0] * len(ctrs)
     newCtrs = [0] * len(ctrs)
 
-    """SOME CODE GOES HERE"""
+    for i in xrange(len(ptsAsgn)):
+        ptsSum[ptsAsgn[i]] = [x + y for x,y in zip(ptsSum[ptsAsgn[i]],tbl[i])]
+        ptsCount[ptsAsgn[i]] = ptsCount[ptsAsgn[i]] + 1
+
+    for k in xrange(len(ctrs)):
+        newCtrs[k] = [x / ptsCount[k] for x in ptsSum[k]]
 
     return newCtrs
 
@@ -69,6 +82,7 @@ def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
 
 
 
+
 ###############################################################################
 # MAIN
 ###############################################################################
@@ -103,9 +117,9 @@ def main():
     """performs k-means clustering, plotting the clusters at each step"""
     while stopCrit == False:
         plotClusters(dataTable, ptMemb, newCtrs, stepCount, analysis_name)
-
-        """SOME CODE GOES HERE"""
-
+        oldCtrs = newCtrs
+        newCtrs = recalculateCtrs(dataTable, oldCtrs, ptMemb)
+        ptMemb = assignPoints(dataTable, newCtrs)
 
         """stop criterion - when centroids' total movement after a step is below
             the threshold, stop the algorithm"""
