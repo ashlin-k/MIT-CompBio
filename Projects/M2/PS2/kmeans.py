@@ -27,7 +27,7 @@ def assignPoints(tbl, ctrs):
     return ptsAsgn
 
 
-def recalculateCtrs(tbl, ctrs, ptsAsgn):
+def recalculateCtrs(tbl, ctrs, ptsAsgn, limits):
     """Update the centroids based on the points assigned to them"""
 
     K = len(ctrs)
@@ -46,10 +46,33 @@ def recalculateCtrs(tbl, ctrs, ptsAsgn):
     
     # divide by total
     for k in range(K):
-        for d in range(D):
-            newCtrs[k][d] /= counts[k]
+        if counts[k] != 0:
+            for d in range(D):
+                newCtrs[k][d] /= counts[k]
+        else:
+            newCtrs[k] = getRandomCtr(limits)
 
     return newCtrs
+
+
+def getRandomCtr(limits):
+
+    newCtr = []
+
+    # assuming n features, limits is organized as:
+    # [
+    #   [x1min, x1max],
+    #   [x2min, x2max],
+    #   ... ,
+    #   [xnmin, xnmax]
+    # ]
+
+    for i in range(len(limits)):
+        xMin = limits[i][0]
+        xMax = limits[i][1]
+        newCtr.append(np.random.uniform(xMin, xMax))
+
+    return newCtr
 
 
 def euclideanDist(x, y):
@@ -123,10 +146,21 @@ def main():
     f.close()
 
     """initializes centroids, stop criterion and step counting for clustering"""
+    K = 3
+    minX1, minX2, maxX1, maxX2 = 0, 0, 0, 0
+    for i in range(len(dataTable)):
+        if dataTable[i][0] < minX1:
+            minX1 = dataTable[i][0]
+        elif dataTable[i][0] > maxX1:
+            maxX1 = dataTable[i][0]
+        if dataTable[i][1] < minX2:
+            minX2 = dataTable[i][1]
+        elif dataTable[i][1] > maxX2:
+            maxX2 = dataTable[i][1]
+    limits = [[minX1, maxX1], [minX2, maxX2]]
     newCtrs = []
-    for i in range(3):
-        rdm = np.random.random_integers(0,len(dataTable)-1)
-        newCtrs.append(dataTable[rdm])
+    for k in range(K):
+        newCtrs.append(getRandomCtr(limits))
     # newCtrs = [[5,0], [5,40], [5,80]]
     ptMemb = assignPoints(dataTable, newCtrs)
     stopCrit = False
@@ -139,7 +173,7 @@ def main():
         """SOME CODE GOES HERE"""
         
         oldCtrs = newCtrs
-        newCtrs = recalculateCtrs(dataTable, newCtrs, ptMemb)
+        newCtrs = recalculateCtrs(dataTable, newCtrs, ptMemb, limits)
         ptMemb = assignPoints(dataTable, newCtrs)
 
 
@@ -148,7 +182,7 @@ def main():
         stopDist = 0
         for i in xrange(len(newCtrs)):
             stopDist = stopDist + euclideanDist(oldCtrs[i], newCtrs[i])
-        if stopDist < 5:
+        if stopDist < 1:
             stopCrit = True
 
         stepCount = stepCount + 1

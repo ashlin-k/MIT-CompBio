@@ -1,3 +1,6 @@
+# Source for formulas:
+# https://www.geeksforgeeks.org/ml-fuzzy-clustering/
+
 import sys
 import math
 from subprocess import call
@@ -8,12 +11,14 @@ def assignPoints(tbl, ctrs):
     """Assign each of the points in tbl to the cluster with
         center in ctrs"""
 
+    global m
+
     # tbl is a Nx2 2D array, N is number of samples
     # ctrs is a kx2 2D array, where k = 3
 
-    # I think ptsAsgn is a Nxk 2D array, 
-    # where ptsAsgn[i] = [prob for k=0, prob for k=1, prob for k=2,...], where k = 0,1,2
-    ptsAsgn = []
+    # I think ptsMembership is a Nxk 2D array, 
+    # where ptsMembership[i] = [prob for k=0, prob for k=1, prob for k=2,...], where k = 0,1,2
+    ptsMembership = []
 
     """SOME CODE GOES HERE"""
     
@@ -21,36 +26,52 @@ def assignPoints(tbl, ctrs):
 
     # this is the formula from lecture, but it doesn't work very well
     # p[k] = (1/(2*math.pi)) * math.exp(-dist/2)
-    # so using formula from wikipedia https://en.wikipedia.org/wiki/Fuzzy_clustering#Algorithm
-
-    m = 2       # m is a param normally set to 2 when the distribution is not known
+    # so using formulas from above source
 
     for pt in tbl:
 
-        # get denom
-        denom = 0.0
-        for k in range(K):
-            denom += euclideanDist(pt, ctrs[k])
+        # # get denom
+        # Dsum = 0.0
+        # for k in range(K):
+        #     Dsum += euclideanDist(pt, ctrs[k])
 
-        weight = [0 for i in range(K)]
+        # if Dsum == 0 :
+        #     print "Centers are all the same. Exiting function"
+        #     exit(1)
+            
+        membership = [0.0 for i in range(K)]
+        ptIsOnCtr = False
 
-        # calculate num and weight
-        for k in range(K):
-            num = float(euclideanDist(pt, ctrs[k]))
-            denom2 = math.pow((num/denom), 2*m-1)
-            if denom2 != 0:
-                weight[k] = 1 / math.pow((num/denom), 2*m-1)
-            else:       # if pt == ctrs[k], set that probability to 1 and rest to zero
-                weight = [0 for i in range(K)]
-                weight[k] = 1
+        # calculate num and membership
+        for j in range(K):
+            Dij = float(euclideanDist(pt, ctrs[j])) # num
+            sumSq = 0.0
+            for k in range(K):
+                Dik = float(euclideanDist(pt, ctrs[k])) # denom
+                if Dik != 0:
+                    sumSq += (Dij**2) / (Dik**2)
+                else:
+                    membership = [0.0 for mem in range(K)]
+                    membership[k] = 1.0
+                    ptIsOnCtr = True
+                    break
+            
+            if ptIsOnCtr:
+                ptIsOnCtr = False
+                break                
+            
+            membership[j] = 1.0 / math.pow(sumSq, 1/(m-1))
+        
+        sumMem = sum(membership)
+        ptsMembership.append(membership)
+      
+    return ptsMembership
 
-        ptsAsgn.append(weight)
 
-    return ptsAsgn
-
-
-def recalculateCtrs(tbl, ctrs, ptsAsgn):
+def recalculateCtrs(tbl, ctrs, ptsMembership):
     """Update the centroids based on the points assigned to them"""
+
+    global m
 
     K = len(ctrs)
     D = len(ctrs[0])
@@ -60,11 +81,11 @@ def recalculateCtrs(tbl, ctrs, ptsAsgn):
     """SOME CODE GOES HERE"""
     
     # sum
-    for i in range(len(ptsAsgn)):
+    for i in range(len(ptsMembership)):
         for k in range(K):
-            pSum[k] += ptsAsgn[i][k]
+            pSum[k] += ptsMembership[i][k]**m
             for d in range(D):
-                newCtrs[k][d] += tbl[i][d] * ptsAsgn[i][k]
+                newCtrs[k][d] += tbl[i][d] * ptsMembership[i][k]**m
     
     # divide by total
     for k in range(K):
@@ -85,6 +106,26 @@ def euclideanDist(x, y):
             dist_val = dist_val + math.pow((x[i] - y[i]),2)
 
     return math.sqrt(dist_val)
+
+
+def getRandomCtr(limits):
+
+    newCtr = []
+
+    # assuming n features, limits is organized as:
+    # [
+    #   [x1min, x1max],
+    #   [x2min, x2max],
+    #   ... ,
+    #   [xnmin, xnmax]
+    # ]
+
+    for i in range(len(limits)):
+        xMin = limits[i][0]
+        xMax = limits[i][1]
+        newCtr.append(np.random.uniform(xMin, xMax))
+
+    return newCtr
 
 
 def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
@@ -126,6 +167,11 @@ def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
 
 def main():
 
+    # m is a FKM param normally set to 2 when the distribution is not known
+    # 1 < m < inf
+    global m    
+    m = 2       
+
     """Checks if we have the right number of command line arguments
        and reads them in"""
     # if len(sys.argv) < 1:
@@ -147,11 +193,21 @@ def main():
     f.close()
 
     """initializes centroids, stop criterion and step counting for clustering"""
+    K = 3
+    minX1, minX2, maxX1, maxX2 = 0, 0, 0, 0
+    for i in range(len(dataTable)):
+        if dataTable[i][0] < minX1:
+            minX1 = dataTable[i][0]
+        elif dataTable[i][0] > maxX1:
+            maxX1 = dataTable[i][0]
+        if dataTable[i][1] < minX2:
+            minX2 = dataTable[i][1]
+        elif dataTable[i][1] > maxX2:
+            maxX2 = dataTable[i][1]
+    limits = [[minX1, maxX1], [minX2, maxX2]]
     newCtrs = []
-    for i in range(3):
-        rdm = np.random.random_integers(0,len(dataTable)-1)
-        newCtrs.append(dataTable[rdm])
-    # newCtrs = [[5,0], [5,40], [5,80]]
+    for k in range(K):
+        newCtrs.append(getRandomCtr(limits))
     ptMemb = assignPoints(dataTable, newCtrs)
     stopCrit = False
     stepCount = 1
