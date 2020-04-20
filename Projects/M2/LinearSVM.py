@@ -110,7 +110,7 @@ class LinearSVM:
             self.w += self.a[n] * self.sv_y[n] * self.sv_x[n]
     
     
-    def predictY(self, X):
+    def predict(self, X):
         # returns predicted Y for a given X
         # y = sign(w.x + b)
         return np.sign(np.dot(X, self.w) + self.b)

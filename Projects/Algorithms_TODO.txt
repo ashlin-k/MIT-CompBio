@@ -7,7 +7,10 @@ M1
 M2
 
 -L7: Nussinov algorithm (RNA folding)
--L8: 
+-L8: Burrows Wheeler transform
+-L8: Multivariate HMMs (?)
+-L8: Hidden chromatin states (?)
+-L10: Enrichment-based motif discovery (infer motifs from targets) with Gibbs sampling
 
 
 ------------------------------------------------------------------------------------

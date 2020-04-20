@@ -66,7 +66,7 @@ def main():
     plt.show()
 
     # do a test sample
-    y_pred = svm.predictY(X_test)
+    y_pred = svm.predict(X_test)
 
     # get the confusion matrix, which tells us the number of
     # predicted (rows) vs actual (cols) instances of classes
