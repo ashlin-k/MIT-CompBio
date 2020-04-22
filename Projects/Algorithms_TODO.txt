@@ -10,7 +10,6 @@ M2
 -L8: Burrows Wheeler transform
 -L8: Multivariate HMMs (?)
 -L8: Hidden chromatin states (?)
--L10: Enrichment-based motif discovery (infer motifs from targets) with Gibbs sampling
 
 
 ------------------------------------------------------------------------------------
