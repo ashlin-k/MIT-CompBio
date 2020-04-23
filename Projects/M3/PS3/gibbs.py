@@ -183,13 +183,13 @@ def main():
     S = readdata(datafile)
 	
     # run gibbs sampling multiple times to find the mostly likely motif
-    N = 100
+    N = 10  # 100
     motifDict = {}
     for i in range(N):
         P = GibbsSampler(S,L)
         motif = GetMotif(P)
         motifDict.setdefault(motif, []).append(P)
-        # PrintResults(P, motif)
+        PrintResults(P, motif)
     
     ### EXTRA: FIND THE MOST COMMON PWM PROGRAMMATICALLY ###
 

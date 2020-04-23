@@ -218,13 +218,13 @@ def main():
 
     ## PRINT RESULTS
 
-    # print "Top 50 most FREQUENT:"
-    # for (kmer,count) in mostFrequentList:
-    #     print kmer, " : ", count 
-    # print ""
-    # print "Top 50 most CONSERVED:"
-    # for (kmer,count) in mostConservedList:
-    #     print kmer, " : ", count
+    print "Top 50 most FREQUENT:"
+    for (kmer,count) in mostFrequentList:
+        print kmer, " : ", count 
+    print ""
+    print "Top 50 most CONSERVED:"
+    for (kmer,count) in mostConservedList:
+        print kmer, " : ", count
 
     ## PART B, CHECK FOR MOST CONSERVED K-MERS IN YEAST
 
