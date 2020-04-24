@@ -6,7 +6,6 @@ M1
 
 M2
 
--L7: Nussinov algorithm (RNA folding)
 -L8: Burrows Wheeler transform
 -L8: Multivariate HMMs (?)
 -L8: Hidden chromatin states (?)
