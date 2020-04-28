@@ -5,15 +5,19 @@ M1
 -unsupervised learning - expectation maximization (Baum-Welch)
 
 M2
-
 -L8: Burrows Wheeler transform
--L8: Multivariate HMMs (?)
--L8: Hidden chromatin states (?)
+-L11: PCA and Sparce PCA
+
+BONUS:
+-L8: Multivariate HMMs
+-L8: Hidden chromatin states
+-L11: Markov clustering
+-L11: Spectral analysis
 
 
 ------------------------------------------------------------------------------------
 
-Other cool algorithms discussed:
+Other cool algorithms discussed, don't have to do:
 
 -L7: RNA reconstruction by mapping to genome
 	-Bowtie (align spliced RNA to genome; cannot align large gaps between spliced RNAs)
