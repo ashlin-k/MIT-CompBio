@@ -26,3 +26,5 @@ Other cool algorithms discussed, don't have to do:
 -L7: RNA reconstruction by aligning de novo (trinity algorithm)
 -L7: Cuffdiff (probabilistic assignment of readcounts to transcripts)
 [-L7: Cummerbund (applications for biological questions - not covered)]
+-L13: GATK HaplotypeCaller
+-L13: atlas2
