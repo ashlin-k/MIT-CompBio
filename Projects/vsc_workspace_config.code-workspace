@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "C:\\Users\\ashli\\Documents\\VisualStudioCode"
+		},
+		{
+			"path": "C:\\catkin_ws"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"files.associations": {
+			"xlocale": "cpp",
+			"xstring": "cpp",
+			"xutility": "cpp"
+		}
+	}
+}
