@@ -2,3 +2,5 @@ Projects/M1/blosum/
 Projects/M2/TCGA-PANCAN-HiSeq-801x20531/
 *.~*
 CATKIN_IGNORE
+Projects/.vscode/
+*__pycache__/

@@ -2,14 +2,13 @@
 # This program uses data from PS2/tissue1_data.txt training
 # The kernel function here is the RBF
 
-from LinearSVM import LinearSVM
 import numpy as np
+from LinearSVM import LinearSVM
 import matplotlib.pyplot as plt
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 from sklearn.metrics import confusion_matrix
-
 
 def f(x, w, b, c=0):
     return (-w[0] * x - b + c) / w[1]
