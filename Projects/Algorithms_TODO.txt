@@ -5,7 +5,6 @@ M1
 -unsupervised learning - expectation maximization (Baum-Welch)
 
 M2
--L8: Burrows Wheeler transform
 -L11: PCA and Sparce PCA
 
 BONUS:
