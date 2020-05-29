@@ -40,9 +40,9 @@ class SuffixTree:
         
         # take last row and store it as an array
         self.bwt = [row[-1:] for row in table]
-        print(self.bwt)
-        print(self.S)
-        print("-----")
+        # print(self.bwt)
+        # print(self.S)
+        # print("-----")
 
         # create an ordered array for fn C(a)
         self.bwtOrdered = self.bwt.copy()
@@ -103,7 +103,7 @@ class SuffixTree:
         return count
 
 
-    def findExactMatch(self, motif):
+    def findMatch(self, motif):
 
         if not self.isInit:
             return -1,-1,-1,-1
@@ -117,8 +117,9 @@ class SuffixTree:
         
         c = motif[M-1]
         if c not in self.bwt:
-            print("Motif contains invalid charachter")
-            return -1,-1,-1,-1
+            print("Invalid characters were detected")
+            return -1, -1, -1, -1
+
         sp = self.C(c)      # index of first appearance of last char
         ep = self.C(c, 1)   # index of first appearance of next lexographical char
         bwtsp = sp
@@ -129,11 +130,16 @@ class SuffixTree:
         # print(self.bwtOrdered)
         # print("c=",c ,", sp=",sp, ", ep=", ep)
 
+        keepGoing = True
+
         while sp <= ep and i >= 0:
+
             c = motif[i]
+
             if c not in self.bwt:
-                print("Motif contains invalid charachter")
-                return -1,-1,-1,-1
+                print("Invalid characters were detected")
+                return -1, -1, -1, -1
+
             # print("c=",c , ", C(c)=", self.C(c), \
             #     ", occ(c,sp)=",self.occurrence(c, sp), \
             #     ", occ(c,ep)=",self.occurrence(c, ep+1), end="")     
@@ -142,6 +148,7 @@ class SuffixTree:
             sp = self.C(c) + self.occurrence(c, sp)
             ep = self.C(c) + self.occurrence(c, ep+1) - 1
             # print(", sp=",sp, ", ep=", ep)
+
             i -= 1
         
         if sp == ep:
@@ -179,6 +186,10 @@ class SuffixTree:
 
     def getGenomeLocations(self, bwtsp, bwtep):
 
+        if bwtsp < 0 or bwtep < 0:
+            print("Motif is not found in the genome")
+            return []
+
         locations = []
         i = bwtsp
         while i <= bwtep:
@@ -187,6 +198,4 @@ class SuffixTree:
 
         locations.sort()
         return locations
-    
-
     

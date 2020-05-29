@@ -8,22 +8,27 @@ if __name__ == "__main__":
 
     genome = "MANOLISKELLIS"
     bwt = SuffixTree(genome)
-    sp, ep, bwtsp, bwtep = bwt.findExactMatch("KE") 
-    print("Table ptr locations:")
-    print ("sp = ", sp, ", ep = ", ep)
-    print("-----")   
+    sp, ep, bwtsp, bwtep = bwt.findMatch("OLAS") 
 
-    locations = bwt.getGenomeLocations(bwtsp, bwtep)
-    print("Genome locations:")
-    print ("bwtsp = ", bwtsp, ", bwtep = ", bwtep)
-    print(genome)
-    i, j = 0, 0
-    while j < len(genome) and i < len(locations):
-        if locations[i] == j:
-            print("^", end = '')
-            i += 1
-        else:
-            print(" ", end = '')
-        j += 1
-    print("")
+    if sp > 0 and ep > 0:
+
+        print("Table ptr locations:")
+        print ("sp = ", sp, ", ep = ", ep)
+        print("-----")   
+
+        locations = bwt.getGenomeLocations(bwtsp, bwtep)
+
+        print("Genome locations:")
+        print ("bwtsp = ", bwtsp, ", bwtep = ", bwtep)
+        print(genome)
+        i, j = 0, 0
+        while j < len(genome) and i < len(locations):
+            if locations[i] == j:
+                print("^", end = '')
+                i += 1
+            else:
+                print(" ", end = '')
+            j += 1
+        print("")
+    
 
