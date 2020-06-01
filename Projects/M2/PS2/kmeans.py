@@ -88,6 +88,51 @@ def euclideanDist(x, y):
     return math.sqrt(dist_val)
 
 
+def kmeans(dataTable, K, analysis_name):
+
+    """initializes centroids, stop criterion and step counting for clustering"""
+    minX1, minX2, maxX1, maxX2 = 0, 0, 0, 0
+    for i in range(len(dataTable)):
+        if dataTable[i][0] < minX1:
+            minX1 = dataTable[i][0]
+        elif dataTable[i][0] > maxX1:
+            maxX1 = dataTable[i][0]
+        if dataTable[i][1] < minX2:
+            minX2 = dataTable[i][1]
+        elif dataTable[i][1] > maxX2:
+            maxX2 = dataTable[i][1]
+    limits = [[minX1, maxX1], [minX2, maxX2]]
+    newCtrs = []
+    for k in range(K):
+        newCtrs.append(getRandomCtr(limits))
+    # newCtrs = [[5,0], [5,40], [5,80]]
+    ptMemb = assignPoints(dataTable, newCtrs)
+    stopCrit = False
+    stepCount = 1
+
+    """performs k-means clustering, plotting the clusters at each step"""
+    while stopCrit == False:
+        plotClusters(dataTable, ptMemb, newCtrs, stepCount, analysis_name)
+
+        """SOME CODE GOES HERE"""
+        
+        oldCtrs = newCtrs
+        newCtrs = recalculateCtrs(dataTable, newCtrs, ptMemb, limits)
+        ptMemb = assignPoints(dataTable, newCtrs)
+
+
+        """stop criterion - when centroids' total movement after a step is below
+            the threshold, stop the algorithm"""
+        stopDist = 0
+        for i in range(len(newCtrs)):
+            stopDist = stopDist + euclideanDist(oldCtrs[i], newCtrs[i])
+        if stopDist < 1:
+            stopCrit = True
+
+        stepCount = stepCount + 1
+
+
+
 def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
     """generate a scatterplot of the current
        k-means cluster assignments
@@ -98,15 +143,15 @@ def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
 
     p = open("./" + anLabel + "_output/dummy_table.txt", "w")
 
-    for i in xrange(len(tbl)):
-        for j in xrange(len(tbl[i])):
+    for i in range(len(tbl)):
+        for j in range(len(tbl[i])):
             p.write(`tbl[i][j]`)
             p.write("\t")
         p.write(`ptMemb[i]`)
         p.write("\n")
 
-    for i in xrange(len(cntrs)):
-        for j in xrange(len(cntrs[i])):
+    for i in range(len(cntrs)):
+        for j in range(len(cntrs[i])):
             p.write(`cntrs[i][j]`);
             p.write("\t")
         p.write("Clust" + `i`)
@@ -145,47 +190,8 @@ def main():
         dataTable.append([float(str) for str in dataLine.rstrip().split("\t")])
     f.close()
 
-    """initializes centroids, stop criterion and step counting for clustering"""
-    K = 3
-    minX1, minX2, maxX1, maxX2 = 0, 0, 0, 0
-    for i in range(len(dataTable)):
-        if dataTable[i][0] < minX1:
-            minX1 = dataTable[i][0]
-        elif dataTable[i][0] > maxX1:
-            maxX1 = dataTable[i][0]
-        if dataTable[i][1] < minX2:
-            minX2 = dataTable[i][1]
-        elif dataTable[i][1] > maxX2:
-            maxX2 = dataTable[i][1]
-    limits = [[minX1, maxX1], [minX2, maxX2]]
-    newCtrs = []
-    for k in range(K):
-        newCtrs.append(getRandomCtr(limits))
-    # newCtrs = [[5,0], [5,40], [5,80]]
-    ptMemb = assignPoints(dataTable, newCtrs)
-    stopCrit = False
-    stepCount = 1
-
-    """performs k-means clustering, plotting the clusters at each step"""
-    while stopCrit == False:
-        plotClusters(dataTable, ptMemb, newCtrs, stepCount, analysis_name)
-
-        """SOME CODE GOES HERE"""
-        
-        oldCtrs = newCtrs
-        newCtrs = recalculateCtrs(dataTable, newCtrs, ptMemb, limits)
-        ptMemb = assignPoints(dataTable, newCtrs)
-
-
-        """stop criterion - when centroids' total movement after a step is below
-            the threshold, stop the algorithm"""
-        stopDist = 0
-        for i in xrange(len(newCtrs)):
-            stopDist = stopDist + euclideanDist(oldCtrs[i], newCtrs[i])
-        if stopDist < 1:
-            stopCrit = True
-
-        stepCount = stepCount + 1
+    k = 3
+    kmeans(dataTable, k, analysis_name)
 
 if __name__ == "__main__":
     main()
