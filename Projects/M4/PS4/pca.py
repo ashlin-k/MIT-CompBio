@@ -3,7 +3,11 @@ import pandas as pd
 from sklearn.decomposition import PCA, SparsePCA
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
-from M2.PS2.kmeans import *
+from subprocess import call
+import sys
+import os
+sys.path.append(os.path.abspath('../../M2/PS2'))
+import kmeans
 
 def readData(filename):
 
@@ -28,7 +32,7 @@ def readData(filename):
     return data, genes, patients
 
 
-def pca(data, genes):
+def pca(data, genes, analysis_name):
 
     dataMatrix = np.array(data)
 
@@ -52,25 +56,36 @@ def pca(data, genes):
 
     # bar graph
     labels = ["PC" + str(x) for x in range(1,len(perVariation)+1)]
-    fig1 = plt.figure(1)
-    plt.bar(x=range(1,len(perVariation)+1), height=perVariation, tick_label=labels)
-    plt.ylabel("Percentage of explained variance")
-    plt.xlabel("Principal component")
-    plt.title("Scree plot")
-    fig1.show()
+    # fig1 = plt.figure(1)
+    # plt.bar(x=range(1,len(perVariation)+1), height=perVariation, tick_label=labels)
+    # plt.ylabel("Percentage of explained variance")
+    # plt.xlabel("Principal component")
+    # plt.title("Scree plot")
+    # fig1.show()
 
-    # scatter plot
-    # fig2 = plt.figure(2)
-    # plt.scatter(pcaData[:,0], pcaData[:,1])
-    # plt.title("PCA graph")
-    # plt.xlabel("PC1")
-    # plt.ylabel("PC2")
-    # fig2.show()
-
-    pc2 = np.zeros(pcaData.shape[0], 2)
+    # use k means to find clusters, k=2
+    pc2 = np.zeros((pcaData.shape[0], 2))
     pc2[:, 0] = pcaData[:, 0]
     pc2[:, 1] = pcaData[:, 1]
-    kmeans(pc2, 2, "pca_plot")
+    ptMem = kmeans.kmeans(pc2, 2, analysis_name, False)
+
+    # scatter plot
+    fig2 = plt.figure(2)
+    pop1, pop2 = [], []
+    for i in range(pcaData.shape[0]):
+        if ptMem[i] == 0:
+            pop1.append(pc2[i,:])
+        elif ptMem[i] == 1:
+            pop2.append(pc2[i,:])
+    pop1arr = np.array(pop1)
+    pop2arr = np.array(pop2)
+    plt.scatter(pop1arr[:,0], pop1arr[:,1], c='b', marker="s", label='Pop 1')
+    plt.scatter(pop2arr[:,0], pop2arr[:,1], c='r', marker="o", label='Pop 2')
+    plt.title("PCA graph")
+    plt.xlabel("PC1")
+    plt.ylabel("PC2")
+    plt.legend(loc='upper right');
+    fig2.show()
 
     input()
 
@@ -94,15 +109,18 @@ def spca(data):
 
 if __name__ == "__main__":
 
-    analysis_name = "tissue2"
+    analysis_name = "pca"
 
-    """creates directories for storing plots and intermediate files"""
-    call(["rm", "-r", "./" + analysis_name + "_plots/"])
-    call(["mkdir", "-p", "./" + analysis_name + "_plots/"])
-    call(["mkdir", "-p", "./" + analysis_name + "_output/"])
+    # """creates directories for storing plots and intermediate files."""
+    # if sys.platform == "linux" or sys.platform == "linux2":
+    #     call(["rm", "-r", "./" + analysis_name + "_plots/"])
+    #     call(["mkdir", "-p", "./" + analysis_name + "_plots/"])
+    #     call(["mkdir", "-p", "./" + analysis_name + "_output/"])
+    # elif sys.platform == "win32":
+    #     os.system("cmd /c if exist " + analysis_name + "_plots rmdir /s /q " \
+    #         + analysis_name + "_plots")
+    #     os.system("cmd /c md " + analysis_name + "_plots")
+    #     os.system("cmd /c md " + analysis_name + "_output")
 
-    data, genes, patients = readData("M4/PS4/ExpData.txt")
-    pcaData = pca(data, genes)
-
-    
-
+    data, genes, patients = readData("ExpData.txt")
+    pcaData = pca(data, genes, analysis_name)

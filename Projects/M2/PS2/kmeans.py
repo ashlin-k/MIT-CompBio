@@ -1,4 +1,5 @@
 import sys
+import os
 import math
 from subprocess import call
 import numpy as np
@@ -78,17 +79,17 @@ def getRandomCtr(limits):
 def euclideanDist(x, y):
 
     if len(x) != len(y):
-        print "x and y must be the same length"
+        print("x and y must be the same length")
         sys.exit(1)
     else:
         dist_val = 0
-        for i in xrange(len(x)):
+        for i in range(len(x)):
             dist_val = dist_val + math.pow((x[i] - y[i]),2)
 
     return math.sqrt(dist_val)
 
 
-def kmeans(dataTable, K, analysis_name):
+def kmeans(dataTable, K, analysis_name, plotWithR=True):
 
     """initializes centroids, stop criterion and step counting for clustering"""
     minX1, minX2, maxX1, maxX2 = 0, 0, 0, 0
@@ -112,7 +113,9 @@ def kmeans(dataTable, K, analysis_name):
 
     """performs k-means clustering, plotting the clusters at each step"""
     while stopCrit == False:
-        plotClusters(dataTable, ptMemb, newCtrs, stepCount, analysis_name)
+
+        if plotWithR:
+            plotClusters(dataTable, ptMemb, newCtrs, stepCount, analysis_name)
 
         """SOME CODE GOES HERE"""
         
@@ -130,6 +133,8 @@ def kmeans(dataTable, K, analysis_name):
             stopCrit = True
 
         stepCount = stepCount + 1
+    
+    return ptMemb
 
 
 
@@ -145,22 +150,29 @@ def plotClusters(tbl, ptMemb, cntrs, stepCnt, anLabel):
 
     for i in range(len(tbl)):
         for j in range(len(tbl[i])):
-            p.write(`tbl[i][j]`)
+            p.write(str(tbl[i][j]))
             p.write("\t")
-        p.write(`ptMemb[i]`)
+        p.write(str(ptMemb[i]))
         p.write("\n")
 
     for i in range(len(cntrs)):
         for j in range(len(cntrs[i])):
-            p.write(`cntrs[i][j]`);
+            p.write(str(cntrs[i][j]));
             p.write("\t")
-        p.write("Clust" + `i`)
+        p.write("Clust" + str(i))
         p.write("\n")
 
     p.close()
 
-    plotCMD = "R CMD BATCH '--args ./" + anLabel + "_output/dummy_table.txt ./" + anLabel + "_plots/cluster_step%d.png" % stepCnt + "' ./kmeans_plot.R;"
-    call(plotCMD, shell=True)
+    if sys.platform == "linux" or sys.platform == "linux2":
+        plotCMD = "R CMD BATCH '--args ./" + anLabel + "_output/dummy_table.txt ./" \
+            + anLabel + "_plots/cluster_step%d.png" % stepCnt + "' ./kmeans_plot.R;"
+        call(plotCMD, shell=True)
+    elif sys.platform == "win32":
+        plotCMD = 'R CMD BATCH "--args ./' + anLabel + '_output/dummy_table.txt ./' \
+            + anLabel + '_plots/cluster_step%d.png' % stepCnt + '" ./kmeans_plot.R;'
+        os.system("cmd /c " + plotCMD)
+        # print(plotCMD)
 
 
 
@@ -179,9 +191,15 @@ def main():
     analysis_name = "tissue2"
 
     """creates directories for storing plots and intermediate files"""
-    call(["rm", "-r", "./" + analysis_name + "_plots/"])
-    call(["mkdir", "-p", "./" + analysis_name + "_plots/"])
-    call(["mkdir", "-p", "./" + analysis_name + "_output/"])
+    if sys.platform == "linux" or sys.platform == "linux2":
+        call(["rm", "-r", "./" + analysis_name + "_plots/"])
+        call(["mkdir", "-p", "./" + analysis_name + "_plots/"])
+        call(["mkdir", "-p", "./" + analysis_name + "_output/"])
+    elif sys.platform == "win32":
+        os.system("cmd /c if exist " + analysis_name + "_plots rmdir /s /q " \
+            + analysis_name + "_plots")
+        os.system("cmd /c md " + analysis_name + "_plots")
+        os.system("cmd /c md " + analysis_name + "_output")
 
     """Reads in the point data from the given tissue file"""
     dataTable = []

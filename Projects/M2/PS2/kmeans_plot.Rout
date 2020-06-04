@@ -1,7 +1,7 @@
 
-R version 3.4.4 (2018-03-15) -- "Someone to Lean On"
-Copyright (C) 2018 The R Foundation for Statistical Computing
-Platform: x86_64-pc-linux-gnu (64-bit)
+R version 4.0.0 (2020-04-24) -- "Arbor Day"
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -25,29 +25,9 @@ Type 'q()' to quit R.
 > plot.file <- as.character(args[2]);
 > 
 > data.table <- read.delim(file = input.file, header = FALSE, stringsAsFactors = FALSE);
-> data.table <- cbind(data.table, grepl("Clust", data.table[,3]));
-> data.table[,3] <- as.numeric(sub("Clust", "", data.table[,3])) + 1;
-> data.table <- cbind(data.table, (data.table[,4] + 0.4) * 3);
-> data.table[,4] <- data.table[,4] * -18 + 19;
-> 
-> png(filename = plot.file, height = 1000, width = 1000);
-> par(mai = c(1,1,0.3,0.3));
-> plot(
-+ 	data.table[,1], data.table[,2],
-+ 	xlab = "BRCA1 Gene Expression",
-+ 	ylab = "SOX2 Gene Expression",
-+ 	col = data.table[,3],
-+ 	pch = data.table[,4],
-+ 	cex = data.table[,5],
-+ 	cex.axis = 1.3,
-+ 	cex.lab = 2.5
-+ 	);
-> dev.off();
-null device 
-          1 
-> 
-> 
-> 
-> proc.time()
-   user  system elapsed 
-  0.248   0.380   0.589 
+Error in file(file, "rt") : cannot open the connection
+Calls: read.delim -> read.table -> file
+In addition: Warning message:
+In file(file, "rt") :
+  cannot open file 'input.file=./tissue2_output/dummy_table.txt': No such file or directory
+Execution halted
