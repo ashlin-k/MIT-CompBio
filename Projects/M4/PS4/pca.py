@@ -3,13 +3,37 @@ import pandas as pd
 from sklearn.decomposition import PCA, SparsePCA
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
-from subprocess import call
 import sys
 import os
 sys.path.append(os.path.abspath('../../M2/PS2'))
 import kmeans
 
-def readData(filename):
+def readGenotypeData(filename):
+
+    file = open(filename, 'r') 
+    data = []
+    patients = []
+
+    # skip first line
+    snps = file.readline()
+    snps = snps.split("\t")
+    snps.pop(0)
+
+    while True:
+        line = file.readline()
+        if not line:
+            break
+        datastrings = line.split("\t")
+        patients.append(datastrings.pop(0))
+        datalist = [int(d) for d in datastrings]
+        data.append(datalist)
+    
+    dataMatrix = np.array(data)
+    
+    return dataMatrix, snps, patients
+
+
+def readExpressionData(filename):
 
     file = open(filename, 'r') 
     data = []
@@ -29,26 +53,12 @@ def readData(filename):
         datalist = [float(d) for d in datastrings]
         data.append(datalist)
     
-    return data, genes, patients
-
-
-def pca(data, genes, analysis_name):
-
     dataMatrix = np.array(data)
+    
+    return dataMatrix, genes, patients
 
-    # scale data: center the average to 0
-    # and scale so that standard deviation = 1
-    scaledData = preprocessing.scale(dataMatrix)
 
-    # do PCA
-    pca = PCA(n_components=dataMatrix.shape[0])
-    # fit uses SVD to create a model (U, SIGMA, V matrices) 
-    # which only keeps n_components number of rows/cols
-    pca.fit(scaledData)
-    # transform actually applies the SVD transformation
-    # to the data. it projects your data onto the n_component
-    # number of PCs
-    pcaData = pca.transform(scaledData)
+def processResults(pca, pcaData, genes):
 
     # extract results
     # calculate the % of variation accounted for by each PC
@@ -102,25 +112,53 @@ def pca(data, genes, analysis_name):
             print(top10[i], " has multiple entries")
 
 
-def spca(data):
+def preprocessData(data):
 
-    return 0
+    # scale data: center the average to 0
+    # and scale so that standard deviation = 1
+    scaledData = preprocessing.scale(data)
+
+    return scaledData
+
+
+def pca(data, genes, analysis_name):
+
+    preprocessedData = preprocessData(data)
+
+    # do PCA
+    pca = PCA(n_components=preprocessedData.shape[0])
+    # fit uses SVD to create a model (U, SIGMA, V matrices) 
+    # which only keeps n_components number of rows/cols
+    pca.fit(preprocessedData)
+    # transform actually applies the SVD transformation
+    # to the data. it projects your data onto the n_component
+    # number of PCs
+    pcaData = pca.transform(preprocessedData)
+
+    processResults(pca, pcaData, genes)
+    
+
+# too slow, too not use
+# def spca(data, genes, analysis_name):
+
+#     preprocessedData = preprocessData(data)
+
+#     # do SPCA
+#     spca = SparsePCA(n_components=10, alpha=1.0)
+#     # fit uses SVD to create a model (U, SIGMA, V matrices) 
+#     # which only keeps n_components number of rows/cols
+#     spca.fit(preprocessedData)
+#     # transform actually applies the SVD transformation
+#     # to the data. it projects your data onto the n_component
+#     # number of PCs
+#     spcaData = spca.transform(preprocessedData)
+
+#     processResults(spca, spcaData, genes)
 
 
 if __name__ == "__main__":
 
     analysis_name = "pca"
 
-    # """creates directories for storing plots and intermediate files."""
-    # if sys.platform == "linux" or sys.platform == "linux2":
-    #     call(["rm", "-r", "./" + analysis_name + "_plots/"])
-    #     call(["mkdir", "-p", "./" + analysis_name + "_plots/"])
-    #     call(["mkdir", "-p", "./" + analysis_name + "_output/"])
-    # elif sys.platform == "win32":
-    #     os.system("cmd /c if exist " + analysis_name + "_plots rmdir /s /q " \
-    #         + analysis_name + "_plots")
-    #     os.system("cmd /c md " + analysis_name + "_plots")
-    #     os.system("cmd /c md " + analysis_name + "_output")
-
-    data, genes, patients = readData("ExpData.txt")
+    data, genes, patients = readExpressionData("ExpData.txt")
     pcaData = pca(data, genes, analysis_name)
